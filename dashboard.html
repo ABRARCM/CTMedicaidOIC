@@ -113,11 +113,17 @@ td.note-cell .note-text.expanded { max-height:none; }
 tr.row-completed { background:#e6fbf3 !important; }
 tr.row-inprogress { background:#fff9e6 !important; }
 tr.row-untouched { background:#ffe0e0 !important; }
+tr.row-escalate-carol { background:#ffe0f0 !important; }
+tr.row-escalate-marilyn { background:#e0ecfa !important; }
+tr.row-ortho-claim { background:#f5e6d0 !important; }
 
 /* Status selects */
 .worked-select { font-family:'Poppins',sans-serif; font-size:11px; padding:3px 6px; border:1px solid #ccc; border-radius:4px; width:110px; }
 .worked-select.status-completed { background:#00D2A0; color:#fff; border-color:#00a87e; }
 .worked-select.status-inprogress { background:#FFD93D; color:#333; border-color:#e6c235; }
+.worked-select.status-escalate-carol { background:#FF69B4; color:#fff; border-color:#e055a0; }
+.worked-select.status-escalate-marilyn { background:#4A90D9; color:#fff; border-color:#3a7bc8; }
+.worked-select.status-ortho-claim { background:#D2B48C; color:#fff; border-color:#c4a67a; }
 .action-select { font-family:'Poppins',sans-serif; font-size:11px; padding:3px 6px; border:1px solid #ccc; border-radius:4px; width:100%; }
 .remarks-input { font-family:'Poppins',sans-serif; font-size:11px; padding:3px 6px; border:1px solid #ccc; border-radius:4px; width:100%; min-width:130px; }
 .remarks-input.has-text { border-color:#2D6A4F; background:#f0f7f2; }
@@ -239,10 +245,14 @@ tr.row-untouched { background:#ffe0e0 !important; }
   <label>Assigned:</label>
   <select id="fAssignee">
     <option value="all">All</option>
-    <option value="AR">AR</option>
-    <option value="MB">MB</option>
-    <option value="NM">NM</option>
-    <option value="CS">CS</option>
+    <option value="ZC">ZC</option>
+    <option value="MO">MO</option>
+    <option value="DH">DH</option>
+    <option value="LS">LS</option>
+    <option value="JC">JC</option>
+    <option value="MA">MA</option>
+    <option value="MY">MY</option>
+    <option value="MR">MR</option>
     <option value="">Unassigned</option>
   </select>
   <label>Status:</label>
@@ -250,6 +260,9 @@ tr.row-untouched { background:#ffe0e0 !important; }
     <option value="all">All</option>
     <option value="completed">Completed (Paid)</option>
     <option value="inprogress">In Progress</option>
+    <option value="escalate_carol">Escalate Carol</option>
+    <option value="escalate_marilyn">Escalate Marilyn</option>
+    <option value="ortho_claim">Ortho Claim</option>
     <option value="">Not Set</option>
   </select>
   <label>Search:</label>
@@ -447,7 +460,7 @@ function updateProgressBar() {
   recs.forEach(r => {
     const w = fbWorked[r.id] || '';
     if (w === 'completed') completed++;
-    else if (w === 'inprogress') inprogress++;
+    else if (w === 'inprogress' || w === 'escalate_carol' || w === 'escalate_marilyn' || w === 'ortho_claim') inprogress++;
   });
   const remaining = total - completed - inprogress;
   const pctC = total > 0 ? (completed/total*100) : 0;
@@ -633,8 +646,8 @@ function renderTable() {
     const wVal=fbWorked[r.id]||'';
     const aVal=fbActions[r.id]||'';
     const rmVal=fbRemarks[r.id]||'';
-    const rowClass=wVal==='completed'?'row-completed':wVal==='inprogress'?'row-inprogress':(!r.trackNote.trim()?'row-untouched':'');
-    const wClass=wVal==='completed'?'status-completed':wVal==='inprogress'?'status-inprogress':'';
+    const rowClass=wVal==='completed'?'row-completed':wVal==='inprogress'?'row-inprogress':wVal==='escalate_carol'?'row-escalate-carol':wVal==='escalate_marilyn'?'row-escalate-marilyn':wVal==='ortho_claim'?'row-ortho-claim':(!r.trackNote.trim()?'row-untouched':'');
+    const wClass=wVal==='completed'?'status-completed':wVal==='inprogress'?'status-inprogress':wVal==='escalate_carol'?'status-escalate-carol':wVal==='escalate_marilyn'?'status-escalate-marilyn':wVal==='ortho_claim'?'status-ortho-claim':'';
     h+=`<tr class="${rowClass}">
       <td><span class="badge ${badgeClass(r.agingBucket)}">${r.agingBucket}</span></td>
       <td>${r.daysOut}</td>
@@ -647,12 +660,15 @@ function renderTable() {
       <td>${r.trackDate}</td>
       <td class="note-cell"><div class="note-text" onclick="this.classList.toggle('expanded')">${esc(r.trackNote)}</div></td>
       <td><select class="action-select" data-id="${r.id}" onchange="saveAssignee(this)">
-        ${['','AR','MB','NM','CS'].map(a=>`<option value="${a}"${(fbAssignees[r.id]||'')===a?' selected':''}>${a||'\\u2014'}</option>`).join('')}
+        ${['','ZC','MO','DH','LS','JC','MA','MY','MR'].map(a=>`<option value="${a}"${(fbAssignees[r.id]||'')===a?' selected':''}>${a||'\\u2014'}</option>`).join('')}
       </select></td>
       <td><select class="worked-select ${wClass}" data-id="${r.id}" onchange="saveWorked(this)">
         <option value=""${wVal===''?' selected':''}>-- Select --</option>
         <option value="completed"${wVal==='completed'?' selected':''}>Completed (Paid)</option>
         <option value="inprogress"${wVal==='inprogress'?' selected':''}>In Progress</option>
+        <option value="escalate_carol"${wVal==='escalate_carol'?' selected':''}>Escalate Carol</option>
+        <option value="escalate_marilyn"${wVal==='escalate_marilyn'?' selected':''}>Escalate Marilyn</option>
+        <option value="ortho_claim"${wVal==='ortho_claim'?' selected':''}>Ortho Claim</option>
       </select></td>
       <td><select class="action-select" data-id="${r.id}" onchange="saveAction(this)">
         ${ACTIONS.map(a=>`<option value="${a}"${aVal===a?' selected':''}>${a||'\u2014 Select \u2014'}</option>`).join('')}
@@ -675,8 +691,8 @@ function saveWorked(el){
   const row=el.closest('tr');
   const rec=DATA.find(r=>r.id===id);
   const untouched=rec&&!rec.trackNote.trim();
-  row.className=val==='completed'?'row-completed':val==='inprogress'?'row-inprogress':(untouched?'row-untouched':'');
-  el.className='worked-select'+(val==='completed'?' status-completed':val==='inprogress'?' status-inprogress':'');
+  row.className=val==='completed'?'row-completed':val==='inprogress'?'row-inprogress':val==='escalate_carol'?'row-escalate-carol':val==='escalate_marilyn'?'row-escalate-marilyn':val==='ortho_claim'?'row-ortho-claim':(untouched?'row-untouched':'');
+  el.className='worked-select'+(val==='completed'?' status-completed':val==='inprogress'?' status-inprogress':val==='escalate_carol'?' status-escalate-carol':val==='escalate_marilyn'?' status-escalate-marilyn':val==='ortho_claim'?' status-ortho-claim':'');
 }
 function saveAssignee(el){assigneeRef.child(el.dataset.id).set(el.value||null);}
 function saveAction(el){actionRef.child(el.dataset.id).set(el.value||null);}
